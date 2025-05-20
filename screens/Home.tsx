@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Text, View, FlatList, StyleSheet, Image, ActivityIndicator } from 'react-native'
 import { WEATHER_API_KEY } from '@env';
 import { NEWS_API_KEY } from '@env';
+import useLiveLocation from '../LiveLocation';
 
 const Home = ({ navigation }: any) => {
   const [weather, setWeather] = useState<any>(null);
@@ -9,10 +10,12 @@ const Home = ({ navigation }: any) => {
   const [loading, setLoading] = useState(true);
   const [loadingnews, setLoadingnews] = useState(true);
   const [newsArticles, setNewsArticles] = useState<any[]>([]);
+  const location = useLiveLocation();
 
-  const FetchWeather = async () => {
+
+  const FetchWeather = async (lat: any, lon: any) => {
     try {
-      const response = await fetch(`http://api.weatherapi.com/v1/forecast.json?key=${WEATHER_API_KEY}&q=Namakkal&days=5&aqi=no&alerts=no`);
+      const response = await fetch(`http://api.weatherapi.com/v1/forecast.json?key=${WEATHER_API_KEY}&q=${lat},${lon}&days=5&aqi=no&alerts=no`);
       //Free plan is only fetching forcaste upto 3 days
       const data = await response.json();
       setWeather(data);
@@ -38,6 +41,14 @@ const fetchNews = async (query: string) => {
   const json = await res.json();
   return json.articles;
 };
+
+useEffect(() => {
+  if (location) {
+    const { latitude, longitude } = location.coords;
+    FetchWeather(latitude, longitude);
+    // FetchNewsBasedOnTemperature();
+  }
+}, [location]);
 
 useEffect(() => {
   if (!weather) return;
