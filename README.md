@@ -1,9 +1,28 @@
-# Weather App
+# 🌤️ Weather + News App
 
-## Home page
+A cross-platform mobile app built with **React Native (CLI)** and **TypeScript** that displays weather forecasts and intelligently fetches news articles based on current weather conditions.
 
-- I have included daily weather and weather for next 3 days (I can't include 5 days as the API doesn't support 5 days since it need subscription)
-- and I have also included list of news baes on the weather condition today
+---
 
-## Settings
-- I have created a setting page were I can change the preferences
+## 📱 Features
+
+- Live location-based weather forecast (3-day, because more than 3 days is paid version).
+- Real-time temperature and weather conditions.
+- Smart news feed filtered by weather mood:
+  - ☀️ Hot → News related to fear/war/conflict.
+  - ❄️ Cold → News related to depression/loss/tragedy.
+  - 🌤️ Moderate → News related to celebration/success/happy stories.
+- Fully responsive UI.
+- Clean and structured component design.
+
+---
+
+## 🛠️ Tech Stack
+
+- React Native CLI
+- TypeScript
+- WeatherAPI (for weather)
+- NewsAPI (for news)
+- Custom Hook for Live Location
+
+---
