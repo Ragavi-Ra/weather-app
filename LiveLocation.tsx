@@ -1,72 +1,57 @@
-// useLiveLocation.ts
-import Geolocation, { GeoPosition } from 'react-native-geolocation-service';
 import { useEffect, useState } from 'react';
 import { Platform, PermissionsAndroid, Alert } from 'react-native';
+import Geolocation, { GeoPosition } from 'react-native-geolocation-service';
 
-const requestLocationPermission = async () => {
+const requestLocationPermission = async (): Promise<boolean> => {
   if (Platform.OS === 'android') {
     try {
       const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
       );
       return granted === PermissionsAndroid.RESULTS.GRANTED;
-    } catch (error) {
-      console.error("Permission error:", error);
+    } catch (err) {
+      console.warn("Permission error:", err);
       return false;
     }
   }
-  return true; // iOS permission is handled in Info.plist
+  return true;
 };
 
-const useLiveLocation = () => {
+const useCurrentLocation = () => {
   const [location, setLocation] = useState<GeoPosition | null>(null);
 
+  const fetchLocation = async () => {
+    const hasPermission = Platform.OS === 'ios' || await requestLocationPermission();
+    if (!hasPermission) {
+      Alert.alert("Location permission not granted");
+      return;
+    }
+
+    Geolocation.getCurrentPosition(
+      (position) => setLocation(position),
+      (error) => {
+        console.error("Location error:", error);
+        Alert.alert("Could not get location");
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 30000,
+      }
+    );
+  };
+
   useEffect(() => {
-    let watchId: number;
+    fetchLocation(); // initial fetch
 
-    const startTracking = async () => {
-      const granted = Platform.OS === 'ios' || await requestLocationPermission();
+    const timer = setTimeout(() => {
+      fetchLocation(); // re-fetch after 1 hour
+    }, 3600000); // 1 hour = 3600000 ms
 
-      if (!granted) {
-        Alert.alert("Location permission not granted");
-        return;
-      }
-
-      watchId = Geolocation.watchPosition(
-        (position) => {
-          setLocation(prev => {
-            // Update only if location has changed
-            if (
-              prev?.coords.latitude !== position.coords.latitude ||
-              prev?.coords.longitude !== position.coords.longitude
-            ) {
-              return position;
-            }
-            return prev;
-          });
-        },
-        (error) => {
-          console.error("Location error:", error);
-        },
-        {
-          enableHighAccuracy: true,
-          distanceFilter: 0,
-          interval: 5000,
-          fastestInterval: 2000,
-        }
-      );
-    };
-
-    startTracking();
-
-    return () => {
-      if (watchId !== undefined) {
-        Geolocation.clearWatch(watchId);
-      }
-    };
+    return () => clearTimeout(timer); // cleanup if user leaves the screen
   }, []);
 
   return location;
 };
 
-export default useLiveLocation;
+export default useCurrentLocation;

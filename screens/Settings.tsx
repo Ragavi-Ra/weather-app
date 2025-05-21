@@ -17,10 +17,12 @@ const newsCategories = [
   'Entertainment',
   'Science',
 ];
+import { useTemperature } from '../context/TempContext';
+import { useSelectedCategories } from '../context/SelectedCategoriesContext';
 
 const PreferencesScreen = () => {
-  const [isCelsius, setIsCelsius] = useState(true);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const {isCelsius, setIsCelsius} = useTemperature();
+  const {selectedCategories, setSelectedCategories} = useSelectedCategories();
 
   const toggleCategory = (category: string) => {
     setSelectedCategories((prev) =>

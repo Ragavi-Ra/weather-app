@@ -7,9 +7,13 @@ import {
   Image,
   ActivityIndicator,
   ScrollView,
+  Linking,
+  TouchableOpacity
 } from 'react-native';
 import { WEATHER_API_KEY, NEWS_API_KEY } from '@env';
-import useLiveLocation from '../LiveLocation';
+import useCurrentLocation from '../LiveLocation';
+import { useTemperature } from '../context/TempContext';
+import { useSelectedCategories } from '../context/SelectedCategoriesContext';
 
 const Home = () => {
   const [weather, setWeather] = useState<any>(null);
@@ -17,7 +21,9 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [loadingnews, setLoadingnews] = useState(true);
   const [newsArticles, setNewsArticles] = useState<any[]>([]);
-  const location = useLiveLocation();
+  let location = useCurrentLocation();
+  const { isCelsius } = useTemperature();
+  const { selectedCategories } = useSelectedCategories();
 
   const FetchWeather = async (lat: number, lon: number) => {
     try {
@@ -34,10 +40,20 @@ const Home = () => {
     }
   };
 
-  const getNewsQueryForWeather = (temperature: number) => {
-    if (temperature >= 30) return 'fear OR war OR conflict';
-    if (temperature <= 20) return 'depression OR loss OR tragedy';
-    return 'happy OR celebration OR success OR win';
+  const getNewsQueryForWeather = (temperature: number, selectedCategories: string[]) => {
+    const tempQuery =
+      temperature >= 30
+        ? 'fear OR war OR conflict'
+        : temperature <= 20
+          ? 'depression OR loss OR tragedy'
+          : 'happy OR celebration OR success OR win';
+
+    const categoryQuery = selectedCategories.length > 0
+      ? selectedCategories.join(' OR ')
+      : '';
+
+    // Combine both
+    return [tempQuery, categoryQuery].filter(Boolean).join(' AND ');
   };
 
   const fetchNews = async (query: string) => {
@@ -59,18 +75,24 @@ const Home = () => {
   useEffect(() => {
     if (!weather) return;
     const currentTemp = weather?.current?.temp_c;
-    const query = getNewsQueryForWeather(currentTemp);
+    const query = getNewsQueryForWeather(currentTemp, selectedCategories);
 
     setLoadingnews(true);
     fetchNews(query)
       .then(setNewsArticles)
       .catch((err) => console.error('Error fetching news:', err))
       .finally(() => setLoadingnews(false));
-  }, [weather]);
+  }, [weather, selectedCategories]);
+
 
   if (loading) {
     return <ActivityIndicator size="large" style={{ marginTop: 50 }} />;
   }
+
+  const temperature = isCelsius
+    ? `${weather?.current?.temp_c} °C`
+    : `${weather?.current?.temp_f} °F`;
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -79,7 +101,7 @@ const Home = () => {
           {weather?.location.name}, {weather?.location.region}
         </Text>
         <Text style={styles.tempText}>
-          {weather?.current.temp_c} °C / {weather?.current.temp_f} °F
+          {temperature}
         </Text>
         <Text style={styles.conditionText}>
           {weather?.current.condition.text}
@@ -120,7 +142,16 @@ const Home = () => {
         newsArticles.map((article, index) => (
           <View key={index} style={styles.newsCard}>
             <Text style={styles.newsTitle}>{article.title}</Text>
-            <Text style={styles.newsDescription}>{article.description}</Text>
+            <Text
+              style={styles.newsDescription}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {article.description}
+            </Text>
+            <TouchableOpacity onPress={() => Linking.openURL(article.url)}>
+              <Text style={[styles.newsDescription, { color: 'blue' }]}>{article.url}</Text>
+            </TouchableOpacity>
           </View>
         ))
       )}
