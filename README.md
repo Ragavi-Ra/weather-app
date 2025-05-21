@@ -14,6 +14,11 @@ A cross-platform mobile app built with **React Native (CLI)** and **TypeScript**
   - Moderate → News related to celebration/success/happy stories.
 - Fully responsive UI.
 - Clean and structured component design.
+- Used React Context API for global state management
+- Manages user preferences like temperature unit (Celsius/Fahrenheit) and news categories
+- Preferences are updated via the Settings page
+- Changes in preferences automatically update temperature display across the app
+- News content is fetched dynamically based on updated user preferences
 
 ---
 
