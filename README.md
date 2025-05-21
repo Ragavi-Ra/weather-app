@@ -28,6 +28,6 @@ A cross-platform mobile app built with **React Native (CLI)** and **TypeScript**
 - TypeScript
 - WeatherAPI (for weather)
 - NewsAPI (for news)
-- Custom Hook for Live Location
+- Native Location and permission
 
 ---
